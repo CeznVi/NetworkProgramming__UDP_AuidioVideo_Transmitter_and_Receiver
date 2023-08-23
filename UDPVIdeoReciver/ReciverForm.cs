@@ -98,18 +98,23 @@ namespace UDPVIdeoReciver
                     _udpVideoClient.Client.SendTimeout = 10;
                     _udpVideoClient.Client.ReceiveTimeout = 10;
                     //////////////
+                    Bitmap bitmap = null;
+                    MemoryStream memoryStream = null;
+                    pictureBox_TV.SizeMode = PictureBoxSizeMode.StretchImage;
 
                     while (_isVideoRecieve)
                     {
                         var data = await _udpVideoClient.ReceiveAsync();
-                        MemoryStream memoryStream = new MemoryStream(data.Buffer);
 
-                        pictureBox_TV.Image = new Bitmap(memoryStream);
+                        memoryStream = new MemoryStream(data.Buffer);
+                        bitmap = new Bitmap(memoryStream);
 
+                        pictureBox_TV.Image = bitmap;
+                        
                         pictureBox_TV.Invalidate();
-
                     }
 
+                    pictureBox_TV.Image = null;
                     _udpVideoClient.Close();
                 }
                 catch (SocketException ex)
