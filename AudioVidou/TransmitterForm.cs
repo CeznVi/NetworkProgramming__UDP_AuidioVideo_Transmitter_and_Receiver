@@ -1,6 +1,7 @@
 ﻿using AForge.Video;
 using AForge.Video.DirectShow;
 using NAudio.CoreAudioApi;
+using NAudio.Wave;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -10,7 +11,11 @@ using System.Linq;
 using System.Media;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace AudioVidou
 {
@@ -18,12 +23,24 @@ namespace AudioVidou
     {
 
         ///-------------Clases for VIDEO---------------------------/
+        
         private FilterInfoCollection videoDevicesInfo;
         private VideoCaptureDevice videoDevice;
-        ///-------------Clases for AUDIO---------------------------/
-        private IEnumerable<MMDevice> CaptureDevices { set; get; }
-        private MMDevice selectedDevice;
 
+        ///-------------Clases for AUDIO---------------------------/
+        
+        /// <summary>
+        /// Колекция в которой хранятся устройства для записи аудио
+        /// </summary>       
+        //private IEnumerable<MMDevice> CaptureDevices { set; get; }
+        /// <summary>
+        /// Selected device
+        /// </summary>
+        //private MMDevice selectedDevice;
+        //private WasapiCapture capture;
+
+
+        WaveInCapabilities selectedDevice;
 
 
         ///-------------NETWORK for VIDEO CLIENT---------------------------/
@@ -34,6 +51,7 @@ namespace AudioVidou
         private UdpClient _udpAudioClient;
         private IPEndPoint _ipEndPointAudio;
         private bool _isAudioTransmit = false;
+     
 
         ///-----------------------------CONSTRUCTOR----------------------------------------\\\
         public TransmitterForm()
@@ -66,22 +84,15 @@ namespace AudioVidou
         /// </summary>
         private void InitAudioDevice()
         {
-            /////init audio device
-            var enumerator = new MMDeviceEnumerator();
-            CaptureDevices = enumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active).ToArray();
+            ///////init audio device
+            if(videoDevicesInfo.Count == 0) return;
 
-            ///this is KOSTIL
-            if (CaptureDevices.ToArray().Length == 0)
+            for (int i = 0; i < WaveIn.DeviceCount; i++)
             {
-                toolStripStatusLabel.ForeColor = Color.Red;
-                toolStripStatusLabel.Text = "Video Device Not Found";
-                return;
+                WaveInCapabilities capabilities = WaveIn.GetCapabilities(i);
+                comboBoxAudioDev.Items.Add(capabilities.ProductName);
             }
 
-            foreach (MMDevice item in CaptureDevices)
-            {
-                comboBoxAudioDev.Items.Add(item.FriendlyName);
-            }
         }
 
         ///====================EVENTS WITH COMBOBOX====================\\\
@@ -100,11 +111,7 @@ namespace AudioVidou
 
         private void comboBoxAudioDev_SelectedIndexChanged(object sender, EventArgs e)
         {
-            foreach(MMDevice item in CaptureDevices)
-            {
-                if (item.ToString() == comboBoxAudioDev.SelectedItem.ToString())
-                    selectedDevice = item;
-            }
+
         }
         ///==================== END EVENTS WITH COMBOBOX====================\\\
 
@@ -157,8 +164,101 @@ namespace AudioVidou
         /// </summary>
         private void buttonAudioStart_Click(object sender, EventArgs e)
         {
+            //try
+            //{
+            //capture = new WasapiCapture(selectedDevice);
+            //capture.ShareMode = AudioClientShareMode.Shared;
+            //capture.WaveFormat = new WaveFormat(16000, 32, 2);
+
+            //capture.StartRecording();
+
+                
+            if (comboBoxAudioDev.Items.Count == 0)
+            {
+                toolStripStatusLabel.ForeColor = Color.Red;
+                toolStripStatusLabel.Text = "Audio Device Not Found";
+                return;
+            }
+            if (comboBoxAudioDev.SelectedIndex == -1)
+            {
+                toolStripStatusLabel.ForeColor = Color.Red;
+                toolStripStatusLabel.Text = "Audio Device Not Selected";
+                return;
+            }
+
+                ////поток для нашей речи
+                WaveIn input;
+                ////буфферный поток для передачи через сеть
+                BufferedWaveProvider bufferStream;
+                input = new WaveIn();
+                input.WaveFormat = new WaveFormat(8000, 16, 1);
+                input.DeviceNumber = comboBoxAudioDev.SelectedIndex;
+                input.DataAvailable += Voice_Input;
+                input.StartRecording();
+                
+
+
+
+            
+
+
+
+
+
+
+
+            //SoundPlayer soundPlayer = new SoundPlayer();
+            //soundPlayer.Stream = capture.CaptureState;
+
+
+
+            ////поток для нашей речи
+            //WaveIn input;
+            ////поток для речи собеседника
+            //WaveOut output;
+            ////буфферный поток для передачи через сеть
+            //BufferedWaveProvider bufferStream;
+
+            //input = new WaveIn();
+            ////определяем его формат - частота дискретизации 8000 Гц, ширина сэмпла - 16 бит, 1 канал - моно
+            //input.WaveFormat = new WaveFormat(8000, 16, 1);
+            ////добавляем код обработки нашего голоса, поступающего на микрофон
+            //input.DataAvailable += Voice_Input;
+            ////создаем поток для прослушивания входящего звука
+            //output = new WaveOut();
+            ////создаем поток для буферного потока и определяем у него такой же формат как и потока с микрофона
+            //bufferStream = new BufferedWaveProvider(new WaveFormat(8000, 16, 1));
+            ////привязываем поток входящего звука к буферному потоку
+            //output.Init(bufferStream);
+
+
+            //}
+            //catch (Exception ex)
+            //{
+            //    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            //}
+        }
+
+        //Обработка нашего голоса
+        private void Voice_Input(object sender, WaveInEventArgs e)
+        {
+            WaveOut output;
+            output = new WaveOut();
+            BufferedWaveProvider bufferStream;
+            bufferStream = new BufferedWaveProvider(new WaveFormat(8000, 16, 1));
+            output.Init(bufferStream);
+
+            byte[] data = e.Buffer;
+            //получено данных
+            int received = e.Buffer.Length;
+            //добавляем данные в буфер, откуда output будет воспроизводить звук
+            bufferStream.AddSamples(data, 0, received);
+            output.Play();
+
+
 
         }
+
 
         ///==================== END EVENTS WITH CLIK BUTTON====================\\\
 
