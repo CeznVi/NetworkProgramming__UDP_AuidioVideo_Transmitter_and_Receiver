@@ -112,6 +112,7 @@ namespace AudioVidou
             this.buttonAudioStart.TabIndex = 5;
             this.buttonAudioStart.Text = "Start";
             this.buttonAudioStart.UseVisualStyleBackColor = true;
+            this.buttonAudioStart.Click += new System.EventHandler(this.buttonAudioStart_Click);
             // 
             // buttonVideoStart
             // 
@@ -205,7 +206,7 @@ namespace AudioVidou
             this.buttonAudioTransmittControl.Name = "buttonAudioTransmittControl";
             this.buttonAudioTransmittControl.Size = new System.Drawing.Size(93, 65);
             this.buttonAudioTransmittControl.TabIndex = 5;
-            this.buttonAudioTransmittControl.Text = "Transmitt Video";
+            this.buttonAudioTransmittControl.Text = "Transmitt Audio";
             this.buttonAudioTransmittControl.UseVisualStyleBackColor = true;
             // 
             // buttonVideoTransmittControl

@@ -1,9 +1,12 @@
 ﻿using AForge.Video;
 using AForge.Video.DirectShow;
+using NAudio.CoreAudioApi;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Media;
 using System.Net;
 using System.Net.Sockets;
@@ -18,6 +21,9 @@ namespace AudioVidou
         private FilterInfoCollection videoDevicesInfo;
         private VideoCaptureDevice videoDevice;
         ///-------------Clases for AUDIO---------------------------/
+        private IEnumerable<MMDevice> CaptureDevices { set; get; }
+        private MMDevice selectedDevice;
+
 
 
         ///-------------NETWORK for VIDEO CLIENT---------------------------/
@@ -61,17 +67,21 @@ namespace AudioVidou
         private void InitAudioDevice()
         {
             /////init audio device
-            //audioDevicesInfo = new FilterInfoCollection(FilterCategory.AudioInputDevice);
-            //if (audioDevicesInfo.Count == 0)
-            //{
-            //    toolStripStatusLabel.ForeColor = Color.Red;
-            //    toolStripStatusLabel.Text = "Audio Device Not Found";
-            //    return;
-            //}
-            //foreach (FilterInfo item in audioDevicesInfo)
-            //{
-            //    comboBoxAudioDev.Items.Add(item.Name);
-            //}
+            var enumerator = new MMDeviceEnumerator();
+            CaptureDevices = enumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active).ToArray();
+
+            ///this is KOSTIL
+            if (CaptureDevices.ToArray().Length == 0)
+            {
+                toolStripStatusLabel.ForeColor = Color.Red;
+                toolStripStatusLabel.Text = "Video Device Not Found";
+                return;
+            }
+
+            foreach (MMDevice item in CaptureDevices)
+            {
+                comboBoxAudioDev.Items.Add(item.FriendlyName);
+            }
         }
 
         ///====================EVENTS WITH COMBOBOX====================\\\
@@ -90,22 +100,24 @@ namespace AudioVidou
 
         private void comboBoxAudioDev_SelectedIndexChanged(object sender, EventArgs e)
         {
-
+            foreach(MMDevice item in CaptureDevices)
+            {
+                if (item.ToString() == comboBoxAudioDev.SelectedItem.ToString())
+                    selectedDevice = item;
+            }
         }
         ///==================== END EVENTS WITH COMBOBOX====================\\\
 
-        private void VideoDevice_NewFrame(object sender, NewFrameEventArgs eventArgs)
-        {
-           Bitmap bitmap = new Bitmap(eventArgs.Frame, pictureBox_TV.Width, pictureBox_TV.Height);
-            pictureBox_TV.Image = bitmap;     
+        ///====================EVENTS WITH CLIK BUTTON====================\\\
 
-        }
-
+        /// <summary>
+        /// Turn on webcam
+        /// </summary>
         private void buttonVideoStart_Click(object sender, EventArgs e)
         {
             try
             {
-                if(videoDevice != null && videoDevice.IsRunning)
+                if (videoDevice != null && videoDevice.IsRunning)
                 {
                     videoDevice.Stop();
                     buttonVideoStart.Text = "Start";
@@ -119,7 +131,7 @@ namespace AudioVidou
                 }
                 else
                 {
-                    if(comboBoxVideoDev.SelectedItem != null)
+                    if (comboBoxVideoDev.SelectedItem != null)
                     {
                         videoDevice.Start();
                         buttonVideoStart.Text = "Stop";
@@ -139,6 +151,25 @@ namespace AudioVidou
 
             }
         }
+
+        /// <summary>
+        /// Turn on microphone
+        /// </summary>
+        private void buttonAudioStart_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        ///==================== END EVENTS WITH CLIK BUTTON====================\\\
+
+
+        private void VideoDevice_NewFrame(object sender, NewFrameEventArgs eventArgs)
+        {
+           Bitmap bitmap = new Bitmap(eventArgs.Frame, pictureBox_TV.Width, pictureBox_TV.Height);
+            pictureBox_TV.Image = bitmap;     
+
+        }
+
 
         private void buttonVideoTransmittControl_Click(object sender, EventArgs e)
         {
