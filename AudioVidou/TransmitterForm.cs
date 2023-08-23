@@ -1,21 +1,13 @@
 ﻿using AForge.Video;
 using AForge.Video.DirectShow;
-using NAudio.CoreAudioApi;
 using NAudio.Wave;
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
-using System.Media;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
 using System.Windows.Forms;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace AudioVidou
 {
@@ -28,21 +20,9 @@ namespace AudioVidou
         private VideoCaptureDevice videoDevice;
 
         ///-------------Clases for AUDIO---------------------------/
-        
-        /// <summary>
-        /// Колекция в которой хранятся устройства для записи аудио
-        /// </summary>       
-        //private IEnumerable<MMDevice> CaptureDevices { set; get; }
-        /// <summary>
-        /// Selected device
-        /// </summary>
-        //private MMDevice selectedDevice;
-        //private WasapiCapture capture;
-
-
-        WaveInCapabilities selectedDevice;
-
-
+        private bool _isAudioTransmit = false;
+        ////поток для нашей речи
+        WaveIn input;
         ///-------------NETWORK for VIDEO CLIENT---------------------------/
         private UdpClient _udpVideoClient;
         private IPEndPoint _ipEndPointVideo;
@@ -50,7 +30,7 @@ namespace AudioVidou
         ///-------------NETWORK for AUDIO CLIENT---------------------------/
         private UdpClient _udpAudioClient;
         private IPEndPoint _ipEndPointAudio;
-        private bool _isAudioTransmit = false;
+        
      
 
         ///-----------------------------CONSTRUCTOR----------------------------------------\\\
@@ -85,14 +65,18 @@ namespace AudioVidou
         private void InitAudioDevice()
         {
             ///////init audio device
-            if(videoDevicesInfo.Count == 0) return;
-
+            if (videoDevicesInfo.Count == 0)
+            {
+                buttonAudioStart.Visible = false;
+                return;
+            }
             for (int i = 0; i < WaveIn.DeviceCount; i++)
             {
                 WaveInCapabilities capabilities = WaveIn.GetCapabilities(i);
                 comboBoxAudioDev.Items.Add(capabilities.ProductName);
             }
-
+            buttonAudioStart.BackColor = Color.Red;
+            buttonAudioStart.Text = "Start Audio";
         }
 
         ///====================EVENTS WITH COMBOBOX====================\\\
@@ -164,99 +148,90 @@ namespace AudioVidou
         /// </summary>
         private void buttonAudioStart_Click(object sender, EventArgs e)
         {
-            //try
-            //{
-            //capture = new WasapiCapture(selectedDevice);
-            //capture.ShareMode = AudioClientShareMode.Shared;
-            //capture.WaveFormat = new WaveFormat(16000, 32, 2);
-
-            //capture.StartRecording();
-
-                
             if (comboBoxAudioDev.Items.Count == 0)
             {
                 toolStripStatusLabel.ForeColor = Color.Red;
                 toolStripStatusLabel.Text = "Audio Device Not Found";
                 return;
             }
-            if (comboBoxAudioDev.SelectedIndex == -1)
+            else if (comboBoxAudioDev.SelectedIndex == -1)
             {
                 toolStripStatusLabel.ForeColor = Color.Red;
                 toolStripStatusLabel.Text = "Audio Device Not Selected";
                 return;
             }
+            else
+            {
+                if(_isAudioTransmit == false)
+                {
+                    try
+                    {
+                        IPAddress iPAddress;
+                        if(IPAddress.TryParse(textBox_IpAddress.Text, out iPAddress))
+                        {
+                            _ipEndPointAudio = new IPEndPoint(iPAddress, Convert.ToInt32(textBox_Port.Text)+1);
+                            _udpAudioClient = new UdpClient();
 
-                ////поток для нашей речи
-                WaveIn input;
-                ////буфферный поток для передачи через сеть
-                BufferedWaveProvider bufferStream;
-                input = new WaveIn();
-                input.WaveFormat = new WaveFormat(8000, 16, 1);
-                input.DeviceNumber = comboBoxAudioDev.SelectedIndex;
-                input.DataAvailable += Voice_Input;
-                input.StartRecording();
-                
+                            textBox_IpAddress.ReadOnly = true;
+                            textBox_Port.ReadOnly = true;
 
+                            input = new WaveIn();
+                            input.WaveFormat = new WaveFormat(8000, 16, 1);
+                            input.DeviceNumber = comboBoxAudioDev.SelectedIndex;
+                            input.DataAvailable += Voice_Input;
+                            input.StartRecording();
 
+                            _isAudioTransmit = true;
+                            ////интерфейс
+                            buttonAudioStart.BackColor = Color.Green;
+                            buttonAudioStart.Text = "Stop Audio";
+                            toolStripStatusLabel.ForeColor = Color.Green;
+                            toolStripStatusLabel.Text = "Audio translation STARTED";
+                            comboBoxAudioDev.Enabled = false;
+                        }
+                        else
+                        {
+                            toolStripStatusLabel.ForeColor = Color.Red;
+                            toolStripStatusLabel.Text = "IP adress is not valid";
+                            return;
+                        }
+                        
+                    }
+                    catch (Exception ex) 
+                    {
+                        MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        if (input != null)
+                        {
+                            input.StopRecording();
+                            input = null;
+                        }
+                    }
+                    catch (Exception ex) 
+                    {
+                        MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    _isAudioTransmit = false;
+                    ////интерфейс
+                    buttonAudioStart.BackColor = Color.Red;
+                    buttonAudioStart.Text = "Start Audio";
+                    toolStripStatusLabel.ForeColor = Color.Red;
+                    toolStripStatusLabel.Text = "Audio translation STOPED";
+                    comboBoxAudioDev.Enabled = true;
+                }
 
-            
-
-
-
-
-
-
-
-            //SoundPlayer soundPlayer = new SoundPlayer();
-            //soundPlayer.Stream = capture.CaptureState;
-
-
-
-            ////поток для нашей речи
-            //WaveIn input;
-            ////поток для речи собеседника
-            //WaveOut output;
-            ////буфферный поток для передачи через сеть
-            //BufferedWaveProvider bufferStream;
-
-            //input = new WaveIn();
-            ////определяем его формат - частота дискретизации 8000 Гц, ширина сэмпла - 16 бит, 1 канал - моно
-            //input.WaveFormat = new WaveFormat(8000, 16, 1);
-            ////добавляем код обработки нашего голоса, поступающего на микрофон
-            //input.DataAvailable += Voice_Input;
-            ////создаем поток для прослушивания входящего звука
-            //output = new WaveOut();
-            ////создаем поток для буферного потока и определяем у него такой же формат как и потока с микрофона
-            //bufferStream = new BufferedWaveProvider(new WaveFormat(8000, 16, 1));
-            ////привязываем поток входящего звука к буферному потоку
-            //output.Init(bufferStream);
-
-
-            //}
-            //catch (Exception ex)
-            //{
-            //    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            //}
+            }
         }
 
-        //Обработка нашего голоса
+        //AUDIO EVENT HANDLER
         private void Voice_Input(object sender, WaveInEventArgs e)
         {
-            WaveOut output;
-            output = new WaveOut();
-            BufferedWaveProvider bufferStream;
-            bufferStream = new BufferedWaveProvider(new WaveFormat(8000, 16, 1));
-            output.Init(bufferStream);
-
-            byte[] data = e.Buffer;
-            //получено данных
-            int received = e.Buffer.Length;
-            //добавляем данные в буфер, откуда output будет воспроизводить звук
-            bufferStream.AddSamples(data, 0, received);
-            output.Play();
-
-
-
+            _udpAudioClient.Send(e.Buffer, e.Buffer.Length, _ipEndPointAudio);
         }
 
 
@@ -293,7 +268,6 @@ namespace AudioVidou
                         toolStripStatusLabel.ForeColor = Color.Green;
                         toolStripStatusLabel.Text = "Video translation STARTED";
                         buttonVideoTransmittControl.BackColor = Color.Lime;
-
                     }
                     else
                     {
@@ -359,6 +333,12 @@ namespace AudioVidou
             {
                 videoDevice.Stop();
                 _isVideoTransmit = false;
+            }
+
+            if(_isAudioTransmit = true && input != null)
+            {
+                input.StopRecording();
+                _isAudioTransmit = false;
             }
         }
 

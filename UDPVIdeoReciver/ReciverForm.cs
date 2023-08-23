@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using System.Threading;
+using NAudio.Wave;
 
 namespace UDPVIdeoReciver
 {
@@ -19,6 +20,12 @@ namespace UDPVIdeoReciver
         private UdpClient _udpVideoClient;
         private IPEndPoint _ipEndPointVideo;
         private bool _isVideoRecieve = false;
+
+        private UdpClient _udpAudioClient;
+        private IPEndPoint _ipEndPointAudio;
+        private bool _isAudioRecieve = false;
+        private WaveOut output;
+        private BufferedWaveProvider bufferStream;
 
         public ReciverForm()
         {
@@ -62,7 +69,6 @@ namespace UDPVIdeoReciver
                     MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
-
             else
             { //stop
                 _isVideoRecieve = false;
@@ -120,5 +126,101 @@ namespace UDPVIdeoReciver
             
 
         }
+
+        private void button_audioControl_Click(object sender, EventArgs e)
+        {
+            if (!_isAudioRecieve)
+            { //start
+
+                try
+                {
+                    IPAddress iPAddress;
+                    if (IPAddress.TryParse(textBox_ipAdress.Text, out iPAddress))
+                    {
+                        _ipEndPointAudio = new IPEndPoint(iPAddress, Convert.ToInt32(textBox_port.Text) + 1);
+
+                        _isAudioRecieve = true;
+                        textBox_port.ReadOnly = true;
+                        textBox_ipAdress.ReadOnly = true;
+
+                        toolStripStatusLabel_Info.Text = "Starting audio data recieve";
+                        toolStripStatusLabel_Info.ForeColor = Color.Green;
+
+                        ReciveAudioContentAsync();
+                    }
+                    else
+                    {
+                        toolStripStatusLabel_Info.ForeColor = Color.Red;
+                        toolStripStatusLabel_Info.Text = "IP is not valid";
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            else
+            { //stop
+                _isAudioRecieve = false;
+
+                textBox_port.ReadOnly = false;
+                textBox_ipAdress.ReadOnly = false;
+
+                if (output != null)
+                {
+                    output.Stop();
+                    output = null;
+                }
+
+                toolStripStatusLabel_Info.Text = "STOPED audio data recieve";
+                toolStripStatusLabel_Info.ForeColor = Color.Red;
+                
+            }
+
+        }
+
+        private async void ReciveAudioContentAsync()
+        {
+            await Task.Run(async () =>
+            {
+                try
+                {
+                    _udpAudioClient = new UdpClient(_ipEndPointAudio);
+                    ////////////// БАГ-Фича майкрософта, у сокета открытого по ЮДП таймаут 3 мин, фикс таймаутов
+                    _udpAudioClient.Client.SendTimeout = 10;
+                    _udpAudioClient.Client.ReceiveTimeout = 10;
+                    //////////////
+
+                    output = new WaveOut();
+                    bufferStream = new BufferedWaveProvider(new WaveFormat(8000, 16, 1));
+                    output.Init(bufferStream);
+
+                    //начинаем воспроизводить входящий звук
+                    output.Play();
+
+                    while (_isAudioRecieve)
+                    {
+                        var data = await _udpAudioClient.ReceiveAsync();
+
+                        bufferStream.AddSamples(data.Buffer, 0, data.Buffer.Length);
+                    }
+
+                    _udpAudioClient.Close();
+                }
+                catch (SocketException ex)
+                {
+                    ////////////// если ловим екзепшен то ничего не делаем, баг-фича с таймаутом 3мин
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+
+            });
+
+
+        }
+
     }
 }

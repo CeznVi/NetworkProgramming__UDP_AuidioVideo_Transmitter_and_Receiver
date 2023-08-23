@@ -103,6 +103,7 @@
             this.button_audioControl.TabIndex = 4;
             this.button_audioControl.Text = "Audio";
             this.button_audioControl.UseVisualStyleBackColor = true;
+            this.button_audioControl.Click += new System.EventHandler(this.button_audioControl_Click);
             // 
             // button_videoControl
             // 

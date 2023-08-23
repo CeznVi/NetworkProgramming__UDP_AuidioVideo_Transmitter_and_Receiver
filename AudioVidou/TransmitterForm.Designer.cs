@@ -106,9 +106,9 @@ namespace AudioVidou
             // buttonAudioStart
             // 
             this.buttonAudioStart.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F);
-            this.buttonAudioStart.Location = new System.Drawing.Point(722, 57);
+            this.buttonAudioStart.Location = new System.Drawing.Point(710, 57);
             this.buttonAudioStart.Name = "buttonAudioStart";
-            this.buttonAudioStart.Size = new System.Drawing.Size(127, 34);
+            this.buttonAudioStart.Size = new System.Drawing.Size(156, 34);
             this.buttonAudioStart.TabIndex = 5;
             this.buttonAudioStart.Text = "Start";
             this.buttonAudioStart.UseVisualStyleBackColor = true;
@@ -117,9 +117,9 @@ namespace AudioVidou
             // buttonVideoStart
             // 
             this.buttonVideoStart.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F);
-            this.buttonVideoStart.Location = new System.Drawing.Point(722, 8);
+            this.buttonVideoStart.Location = new System.Drawing.Point(710, 8);
             this.buttonVideoStart.Name = "buttonVideoStart";
-            this.buttonVideoStart.Size = new System.Drawing.Size(127, 32);
+            this.buttonVideoStart.Size = new System.Drawing.Size(156, 32);
             this.buttonVideoStart.TabIndex = 4;
             this.buttonVideoStart.Text = "Start";
             this.buttonVideoStart.UseVisualStyleBackColor = true;
@@ -208,6 +208,7 @@ namespace AudioVidou
             this.buttonAudioTransmittControl.TabIndex = 5;
             this.buttonAudioTransmittControl.Text = "Transmitt Audio";
             this.buttonAudioTransmittControl.UseVisualStyleBackColor = true;
+            this.buttonAudioTransmittControl.Visible = false;
             // 
             // buttonVideoTransmittControl
             // 
@@ -271,7 +272,7 @@ namespace AudioVidou
             this.Controls.Add(this.menuStrip);
             this.MainMenuStrip = this.menuStrip;
             this.Name = "TransmitterForm";
-            this.Text = "Form1";
+            this.Text = "Transmitter";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.TransmitterForm_FormClosing);
             this.statusStrip.ResumeLayout(false);
             this.statusStrip.PerformLayout();
