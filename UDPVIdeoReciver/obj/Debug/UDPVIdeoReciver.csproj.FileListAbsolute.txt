@@ -1,0 +1,11 @@
+C:\Users\Admin\Desktop\AudioVidou\UDPVIdeoReciver\obj\Debug\UDPVIdeoReciver.csproj.AssemblyReference.cache
+C:\Users\Admin\Desktop\AudioVidou\UDPVIdeoReciver\obj\Debug\UDPVIdeoReciver.ReciverForm.resources
+C:\Users\Admin\Desktop\AudioVidou\UDPVIdeoReciver\obj\Debug\UDPVIdeoReciver.Properties.Resources.resources
+C:\Users\Admin\Desktop\AudioVidou\UDPVIdeoReciver\obj\Debug\UDPVIdeoReciver.Resource1.resources
+C:\Users\Admin\Desktop\AudioVidou\UDPVIdeoReciver\obj\Debug\UDPVIdeoReciver.csproj.GenerateResource.cache
+C:\Users\Admin\Desktop\AudioVidou\UDPVIdeoReciver\obj\Debug\UDPVIdeoReciver.csproj.CoreCompileInputs.cache
+C:\Users\Admin\Desktop\AudioVidou\UDPVIdeoReciver\bin\Debug\UDPVIdeoReciver.exe.config
+C:\Users\Admin\Desktop\AudioVidou\UDPVIdeoReciver\bin\Debug\UDPVIdeoReciver.exe
+C:\Users\Admin\Desktop\AudioVidou\UDPVIdeoReciver\bin\Debug\UDPVIdeoReciver.pdb
+C:\Users\Admin\Desktop\AudioVidou\UDPVIdeoReciver\obj\Debug\UDPVIdeoReciver.exe
+C:\Users\Admin\Desktop\AudioVidou\UDPVIdeoReciver\obj\Debug\UDPVIdeoReciver.pdb
