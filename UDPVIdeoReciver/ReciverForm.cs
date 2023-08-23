@@ -30,6 +30,8 @@ namespace UDPVIdeoReciver
         public ReciverForm()
         {
             InitializeComponent();
+            button_videoControl.BackColor = Color.Red;
+            button_audioControl.BackColor = Color.Red;
         }
 
         private void button_videoControl_Click(object sender, EventArgs e)
@@ -50,6 +52,7 @@ namespace UDPVIdeoReciver
 
                         toolStripStatusLabel_Info.Text = "Starting video data recieve";
                         toolStripStatusLabel_Info.ForeColor = Color.Green;
+                        button_videoControl.BackColor = Color.Green;
 
                         ReciveVideoContentAsync();
 
@@ -81,7 +84,7 @@ namespace UDPVIdeoReciver
 
                 toolStripStatusLabel_Info.Text = "STOPED video data recieve";
                 toolStripStatusLabel_Info.ForeColor = Color.Red;
-                
+                button_videoControl.BackColor = Color.Red;
             }
 
         }
@@ -150,7 +153,7 @@ namespace UDPVIdeoReciver
 
                         toolStripStatusLabel_Info.Text = "Starting audio data recieve";
                         toolStripStatusLabel_Info.ForeColor = Color.Green;
-
+                        button_audioControl.BackColor = Color.Green;
                         ReciveAudioContentAsync();
                     }
                     else
@@ -180,7 +183,7 @@ namespace UDPVIdeoReciver
 
                 toolStripStatusLabel_Info.Text = "STOPED audio data recieve";
                 toolStripStatusLabel_Info.ForeColor = Color.Red;
-                
+                button_audioControl.BackColor = Color.Red;
             }
 
         }
