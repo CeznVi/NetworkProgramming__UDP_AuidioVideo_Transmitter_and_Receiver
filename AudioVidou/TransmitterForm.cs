@@ -30,8 +30,6 @@ namespace AudioVidou
         ///-------------NETWORK for AUDIO CLIENT---------------------------/
         private UdpClient _udpAudioClient;
         private IPEndPoint _ipEndPointAudio;
-        
-     
 
         ///-----------------------------CONSTRUCTOR----------------------------------------\\\
         public TransmitterForm()
@@ -241,8 +239,7 @@ namespace AudioVidou
         private void VideoDevice_NewFrame(object sender, NewFrameEventArgs eventArgs)
         {
            Bitmap bitmap = new Bitmap(eventArgs.Frame, pictureBox_TV.Width, pictureBox_TV.Height);
-            pictureBox_TV.Image = bitmap;     
-
+           pictureBox_TV.Image = bitmap;
         }
 
 
@@ -313,7 +310,6 @@ namespace AudioVidou
         private void _videoDevice_NewFrame(object sender, NewFrameEventArgs eventArgs)
         {
             ///Передача данніх по сеті
-            
             if(_isVideoTransmit)
             {
                 Bitmap bitmap = new Bitmap(eventArgs.Frame, pictureBox_TV.Width, pictureBox_TV.Height);
